@@ -48,7 +48,6 @@ class GridTests: XCTestCase {
 
   func testIndices_withDoubleRotation() throws {
     let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5)).rotated.rotated
-    print(Array(grid.indices.map { ($0, $0.applying(grid.transform)) }))
     print(grid)
 
     XCTAssertEqual(Array(grid.indices).count, 10 * 5)
