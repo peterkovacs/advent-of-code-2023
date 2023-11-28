@@ -1,14 +1,15 @@
 import Foundation
+import CoreGraphics
 
 public struct InfiniteGrid<Element> {
   var elements: [Coord: Element]
-  var defaultElement: (Coord) -> Element
+  var defaultElement: Element
   public var origin: Coord
   public var size: Coord
 
   fileprivate init(
     elements: [Coord: Element],
-    defaultElement: @escaping (Coord) -> Element,
+    defaultElement: Element,
     origin: Coord,
     size: Coord
   ) {
@@ -24,15 +25,15 @@ public struct InfiniteGrid<Element> {
   ) {
     self.origin = .zero
     self.size = size
-    self.defaultElement = { _ in element }
+    self.defaultElement = element
     self.elements = [:]
   }
 
   public init<Seq: Sequence>(
     _ input: Seq,
     size: Coord,
-    default: @escaping (Coord) -> Element
-  ) where Seq.Element == Element {
+    default: Element
+  ) where Seq.Element == Element, Element: Equatable {
     self.origin = .zero
     self.size = size
     self.defaultElement = `default`
@@ -41,19 +42,18 @@ public struct InfiniteGrid<Element> {
       uniqueKeysWithValues: zip(
         Grid<Element>.CoordinateIterator(
           size: size,
-          transform: .identity,
           coordinate: .zero
         ),
         input
-      )
+      ).filter {
+        $0.1 != `default`
+      }
     )
-
-    precondition(size.x * size.y == elements.count)
   }
 
   public subscript(_ coord: Coord) -> Element {
     _read {
-      yield elements[coord] ?? defaultElement(coord)
+      yield elements[coord] ?? defaultElement
     }
 
     _modify {
@@ -62,15 +62,15 @@ public struct InfiniteGrid<Element> {
       size.x   = Swift.max(size.x,   coord.x+1)
       size.y   = Swift.max(size.y,   coord.y+1)
 
-      yield &elements[coord, default: defaultElement(coord)]
+      yield &elements[coord, default: defaultElement]
     }
   }
 
-  func neighbors(adjacent coord: Coord) -> [Coord] {
+  public func neighbors(adjacent coord: Coord) -> [Coord] {
     coord.adjacent
   }
 
-  func neighbors(around coord: Coord) -> [Coord] {
+  public func neighbors(around coord: Coord) -> [Coord] {
     coord.around
   }
 }
@@ -109,22 +109,22 @@ extension InfiniteGrid: Sequence {
     .init(grid: self, iterator: indices)
   }
 
-  func map<U>(_ f: @escaping (Element) -> U) -> InfiniteGrid<U> {
+  public func map<U>(_ f: (Element) -> U) -> InfiniteGrid<U> {
     .init(
       elements: elements.mapValues(f),
-      defaultElement: { f(defaultElement($0)) },
+      defaultElement: f(defaultElement),
       origin: origin,
       size: size
     )
   }
 
-  func flatMap<U>(default: @escaping @autoclosure () -> U, _ f: @escaping (Element) -> U?) -> InfiniteGrid<U>? {
+  public func flatMap<U>(_ f: (Element) -> U?) -> InfiniteGrid<U>? {
     let elements = self.elements.compactMapValues(f)
     guard elements.count == self.elements.count else { return nil }
 
     return .init(
       elements: elements,
-      defaultElement: { f(defaultElement($0)) ?? `default`() },
+      defaultElement: f(defaultElement)!,
       origin: origin,
       size: size
     )
@@ -138,9 +138,7 @@ extension InfiniteGrid: CustomStringConvertible where Element: CustomStringConve
 
     for y in origin.y..<size.y {
       for x in origin.x..<size.x {
-        let c = Coord(x: x, y: y)
-        // result.append(c.description)
-        result.append(self[c].description)
+        result.append(self[.init(x: x, y: y)].description)
       }
 
       result.append("\n")
