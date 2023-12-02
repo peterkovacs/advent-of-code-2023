@@ -49,13 +49,11 @@ struct Day2: ParsableCommand {
         } terminator: {
           End()
         }
-      }.eraseToAnyParser()
+      }
     }
 
-
-
-  mutating func run() throws {
-    let games = try input.map { try Parser.parser.parse($0) }
+  func run() throws {
+    let games = try input.map(Parser.parser.parse)
     let part1 = games.filter { id, games in
       games.allSatisfy { game in
         game.red <= 12 &&
