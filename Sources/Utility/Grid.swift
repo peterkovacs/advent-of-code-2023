@@ -20,11 +20,11 @@ extension Coord {
   public var up: Coord    { self + .up    }
   public var down: Coord  { self + .down  }
 
-  static var zero:  Self { .init(x: 0, y: 0)  }
-  static var right: Self { .init(x: 1, y: 0)  }
-  static var left:  Self { .init(x: -1, y: 0) }
-  static var up:    Self { .init(x: 0, y: -1) }
-  static var down:  Self { .init(x: 0, y: 1)  }
+  public static var zero:  Self { .init(x: 0, y: 0)  }
+  public static var right: Self { .init(x: 1, y: 0)  }
+  public static var left:  Self { .init(x: -1, y: 0) }
+  public static var up:    Self { .init(x: 0, y: -1) }
+  public static var down:  Self { .init(x: 0, y: 1)  }
 }
 
 extension Coord {
@@ -132,6 +132,11 @@ public struct Grid<Element> {
     assert(size.x * size.y == elements.count, "Input provided was not the expected size: \(size): \(size.x * size.y) != \(elements.count)")
   }
 
+  public func isValid(_ coord: Coord) -> Bool {
+    let p = coord.applying(transform)
+    return p.x < size.x && p.x >= 0 && p.y < size.y && p.y >= 0
+  }
+
   public subscript(_ coord: Coord) -> Element {
     _read {
       let p = coord.applying(transform)
@@ -155,17 +160,11 @@ public struct Grid<Element> {
   }
 
   public func neighbors(adjacent coord: Coord) -> [Coord] {
-    coord.adjacent.filter {
-      $0.x >= 0 && $0.x < size.x &&
-      $0.y >= 0 && $0.y < size.y
-    }
+    coord.adjacent.filter(isValid)
   }
 
   public func neighbors(around coord: Coord) -> [Coord] {
-    coord.around.filter {
-      $0.x >= 0 && $0.x < size.x &&
-      $0.y >= 0 && $0.y < size.y
-    }
+    coord.around.filter(isValid)
   }
 }
 

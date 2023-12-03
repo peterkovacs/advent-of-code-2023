@@ -4,6 +4,49 @@ import XCTest
 @testable import Utility
 
 class GridTests: XCTestCase {
+  func testNeighborsAround() throws {
+    let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5))
+    XCTAssertEqual(grid.neighbors(around: .zero), [.init(x: 0, y: 1), .init(x: 1, y: 1), .init(x: 1, y: 0)])
+    XCTAssertEqual(grid.neighbors(around: .init(x: 3, y: 3)), [.init(x: 4, y: 2), .init(x: 3, y: 2), .init(x: 2, y: 2), .init(x: 2, y: 3), .init(x: 2, y: 4), .init(x: 3, y: 4), .init(x: 4, y: 4), .init(x: 4, y: 3)])
+    XCTAssertEqual(grid.neighbors(around: .init(x: 9, y: 4)), [.init(x: 9, y: 3), .init(x: 8, y: 3), .init(x: 8, y: 4)])
+  }
+
+  func testNeighborsAround_withRotation() throws {
+    let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5)).rotated
+    XCTAssertEqual(grid.neighbors(around: .zero), [.init(x: 0, y: 1), .init(x: 1, y: 1), .init(x: 1, y: 0)])
+    XCTAssertEqual(grid.neighbors(around: .init(x: 3, y: 3)), [.init(x: 4, y: 2), .init(x: 3, y: 2), .init(x: 2, y: 2), .init(x: 2, y: 3), .init(x: 2, y: 4), .init(x: 3, y: 4), .init(x: 4, y: 4), .init(x: 4, y: 3)])
+    XCTAssertEqual(grid.neighbors(around: .init(x: 4, y: 9)), [.init(x: 4, y: 8), .init(x: 3, y: 8), .init(x: 3, y: 9)])
+  }
+
+  func testNeighborsAround_withScale() throws {
+    let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5)).scaled(x: 10, y: 10)
+    XCTAssertEqual(grid.neighbors(around: .zero), [.init(x: 0, y: 1), .init(x: 1, y: 1), .init(x: 1, y: 0)])
+    XCTAssertEqual(grid.neighbors(around: .init(x: 30, y: 30)), [.init(x: 31, y: 29), .init(x: 30, y: 29), .init(x: 29, y: 29), .init(x: 29, y: 30), .init(x: 29, y: 31), .init(x: 30, y: 31), .init(x: 31, y: 31), .init(x: 31, y: 30)])
+    XCTAssertEqual(grid.neighbors(around: .init(x: 99, y: 49)), [.init(x: 99, y: 48), .init(x: 98, y: 48), .init(x: 98, y: 49)])
+  }
+
+  func testNeighborsAdjacent() throws {
+    let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5))
+    XCTAssertEqual(grid.neighbors(adjacent: .zero), [.init(x: 0, y: 1), .init(x: 1, y: 0)])
+    XCTAssertEqual(grid.neighbors(adjacent: .init(x: 3, y: 3)), [.init(x: 3, y: 2), .init(x: 2, y: 3), .init(x: 3, y: 4), .init(x: 4, y: 3)])
+    XCTAssertEqual(grid.neighbors(adjacent: .init(x: 9, y: 4)), [.init(x: 9, y: 3), .init(x: 8, y: 4)])
+  }
+
+  func testNeighborsAdjacent_withRotation() throws {
+    let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5)).rotated
+    XCTAssertEqual(grid.neighbors(adjacent: .zero), [.init(x: 0, y: 1), .init(x: 1, y: 0)])
+    XCTAssertEqual(grid.neighbors(adjacent: .init(x: 3, y: 3)), [.init(x: 3, y: 2), .init(x: 2, y: 3), .init(x: 3, y: 4), .init(x: 4, y: 3)])
+    XCTAssertEqual(grid.neighbors(adjacent: .init(x: 4, y: 9)), [.init(x: 4, y: 8), .init(x: 3, y: 9)])
+  }
+
+  func testNeighborsAdjacent_withScale() throws {
+    let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5)).scaled(x: 10, y: 10)
+    XCTAssertEqual(grid.neighbors(adjacent: .zero), [.init(x: 0, y: 1), .init(x: 1, y: 0)])
+    XCTAssertEqual(grid.neighbors(adjacent: .init(x: 30, y: 30)), [.init(x: 30, y: 29), .init(x: 29, y: 30), .init(x: 30, y: 31), .init(x: 31, y: 30)])
+    XCTAssertEqual(grid.neighbors(adjacent: .init(x: 99, y: 49)), [.init(x: 99, y: 48), .init(x: 98, y: 49)])
+  }
+
+
   func testIndices() throws {
     let grid = Grid("abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXY", size: .init(x: 10, y: 5))
     print(grid)
