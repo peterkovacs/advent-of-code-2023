@@ -7,9 +7,14 @@ import Foundation
 
 struct Day5: ParsableCommand {
 
-  struct Map {
+  struct Map: Comparable {
     let source: Range<Int>
     let offset: Int
+
+    static func <(l: Self, r: Self) -> Bool {
+      l.source.lowerBound == r.source.lowerBound ? l.source.upperBound < r.source.upperBound : l.source.lowerBound < r.source.lowerBound
+    }
+
     static let parser: some Parsing.Parser<Substring.UTF8View, Self> = Parse {
       Map(source: $1..<($1 + $2), offset: $0 - $1)
     } with: {
@@ -19,25 +24,28 @@ struct Day5: ParsableCommand {
       " ".utf8
       Int.parser() // range length
     }
-
   }
 
   enum Parser {
-    static var rangeMap: AnyParser<Substring.UTF8View, [Map]> = Many {
-      Map.parser
-    } separator: {
-      Whitespace(1, .vertical)
-    } terminator: {
-      OneOf {
-        Whitespace(2, .vertical)
-        Skip {
-          Optionally { Whitespace(1, .vertical) }
-          End()
+    static var rangeMap: some Parsing.Parser<Substring.UTF8View, [Map]> = Parse { (result: [Map]) in
+      result.sorted()
+    } with: {
+      Many {
+        Map.parser
+      } separator: {
+        Whitespace(1, .vertical)
+      } terminator: {
+        OneOf {
+          Whitespace(2, .vertical)
+          Skip {
+            Optionally { Whitespace(1, .vertical) }
+            End()
+          }
         }
       }
-    }.eraseToAnyParser()
+    }
 
-    static var parser = Parse {
+    static var parser: some Parsing.Parser<Substring.UTF8View, ([Int], [[Map]])> = Parse {
       Parse {
         "seeds: ".utf8
         Many {
@@ -68,28 +76,51 @@ struct Day5: ParsableCommand {
   func run() throws {
     let (seeds, maps) = try Parser.parser.parse(stdin)
 
-    let part1 = seeds.map {
-      maps.reduce($0) { partialResult, i in
+    func calculate(i: Int) -> Int {
+      maps.reduce(i) { partialResult, i in
         i.find(input: partialResult)
       }
-    }.min()!
+    }
+
+    let part1 = seeds.map(calculate(i:)).min()!
 
     print("Part 1", part1)
 
-    let seedRanges = seeds.indices.striding(by: 2).map {
-      seeds[$0]..<(seeds[$0] + seeds[$0 + 1])
-    }
+    let part2 = seeds.indices.striding(by: 2).map {
+      minimum(range: seeds[$0] ..< (seeds[$0] + seeds[$0+1]), layers: maps[...])
+    }.min()!
 
-    var result = [Int](repeating: 0, count: seedRanges.count)
-    DispatchQueue.concurrentPerform(iterations: seedRanges.count) { i in
-      result[i] = seedRanges[i].lazy.map {
-        maps.reduce($0) { partialResult, i in
-          i.find(input: partialResult)
-        }
-      }.min()!
-    }
+    print("Part 2", part2)
+  }
 
-    print("Part 2", result, result.min()!)
+  func minimum(range: Range<Int>, layers: ArraySlice<[Map]>) -> Int {
+    guard !layers.isEmpty else { return range.lowerBound }
+
+    let destination = layers.first?.first { $0.source.overlaps(range) }
+    guard let destination else { return minimum(range: range, layers: layers.dropFirst()) }
+
+    if range.lowerBound < destination.source.lowerBound {
+      return min(
+        minimum(range: range.lowerBound..<destination.source.lowerBound, layers: layers.dropFirst()),
+        minimum(range: destination.source.lowerBound..<range.upperBound, layers: layers)
+      )
+    } else if range.upperBound <= destination.source.upperBound {
+      return minimum(
+        range: range + destination.offset,
+        layers: layers.dropFirst()
+      )
+    } else {
+      return min(
+        minimum(range: (range.lowerBound..<destination.source.upperBound) + destination.offset, layers: layers.dropFirst()),
+        minimum(range: (destination.source.upperBound..<range.upperBound), layers: layers)
+      )
+    }
+  }
+}
+
+private extension Range<Int> {
+  static func +(l: Self, r: Int) -> Self {
+    return (l.lowerBound + r) ..< (l.upperBound + r)
   }
 }
 
