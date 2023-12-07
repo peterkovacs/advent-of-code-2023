@@ -77,9 +77,7 @@ struct Day5: ParsableCommand {
     let (seeds, maps) = try Parser.parser.parse(stdin)
 
     func calculate(i: Int) -> Int {
-      maps.reduce(i) { partialResult, i in
-        i.find(input: partialResult)
-      }
+      minimum(range: i..<(i+1), layers: maps[...])
     }
 
     let part1 = seeds.map(calculate(i:)).min()!
@@ -121,11 +119,5 @@ struct Day5: ParsableCommand {
 private extension Range<Int> {
   static func +(l: Self, r: Int) -> Self {
     return (l.lowerBound + r) ..< (l.upperBound + r)
-  }
-}
-
-private extension Array where Element == Day5.Map {
-  func find(input: Int) -> Int {
-    input + (first { $0.source.contains(input) }?.offset ?? 0)
   }
 }
