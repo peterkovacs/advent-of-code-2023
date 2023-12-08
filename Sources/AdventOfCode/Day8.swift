@@ -3,6 +3,7 @@ import ArgumentParser
 import Parsing
 import Foundation
 import Collections
+import Algorithms
 
 struct Day8: ParsableCommand { 
   enum Parser {
@@ -51,33 +52,31 @@ struct Day8: ParsableCommand {
     print("Part 1", count)
   }
 
+  struct Iterator: Sequence, IteratorProtocol {
+    var node: String
+    var iter: CycledSequence<[WritableKeyPath<Day8.Parser.Node, String>]>.Iterator
+    let nodes: [String: (String, String)]
+
+    mutating func next() -> String? {
+      if node.last == "Z" { return nil }
+      defer { self.node = nodes[node]![keyPath: iter.next()!] }
+      return node
+    }
+  }
+
   func part2(_ stdin: String) throws {
     let (instructions, nodes) = try Parser.parser.parse(stdin)
     let starting = nodes.keys.filter { $0.last == "A" }
-    struct Visit: Hashable {
-      let node: String
-      let i: Int
-    }
 
-    let cycles = starting.map {
-      var node = $0
-      var next = Array(instructions.enumerated()).cycled().makeIterator()
-      var visited = Set<Visit>()
-      var i = next.next()!
-      var count = 0
+    let part2 = starting.map {
+      Iterator(
+        node: $0,
+        iter: instructions.cycled().makeIterator(),
+        nodes: nodes
+      ).reduce(0) { i, _ in i + 1 }
+    }.reduce(1, lcm)
 
-      while visited.insert(.init(node: node, i: i.offset)).inserted, node.last != "Z" {
-        node = nodes[node]![keyPath: i.element]
-        i = next.next()!
-        count += 1
-      }
-
-      print($0, node, count)
-
-      return count
-    }
-
-    print(cycles)
+    print("Part 2", part2)
   }
 
   func run() throws {
@@ -87,3 +86,22 @@ struct Day8: ParsableCommand {
   }
 }
 
+func gcd(_ x: Int, _ y: Int) -> Int {
+    var a = 0
+    var b = max(x, y)
+    var r = min(x, y)
+
+    while r != 0 {
+        a = b
+        b = r
+        r = a % b
+    }
+    return b
+}
+
+/*
+ Returns the least common multiple of two numbers.
+ */
+func lcm(_ x: Int, _ y: Int) -> Int {
+    return x / gcd(x, y) * y
+}
