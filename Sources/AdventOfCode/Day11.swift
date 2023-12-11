@@ -15,8 +15,8 @@ struct Day11: ParsableCommand {
         let x = a.x < b.x ? a.x..<b.x : b.x..<a.x
         let y = a.y < b.y ? a.y..<b.y : b.y..<a.y
 
-        let rows = emptyRows.drop { $0 < y.lowerBound }.prefix { $0 < y.upperBound }.count
-        let cols = emptyCols.drop { $0 < x.lowerBound }.prefix { $0 < x.upperBound }.count
+        let rows = emptyRows.partitioningIndex { $0 >= y.upperBound } - emptyRows.partitioningIndex { $0 >= y.lowerBound }
+        let cols = emptyCols.partitioningIndex { $0 >= x.upperBound } - emptyCols.partitioningIndex { $0 >= x.lowerBound }
 
         return (
           $0.0 + a.distance(to: b),
