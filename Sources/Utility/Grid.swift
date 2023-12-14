@@ -182,6 +182,30 @@ extension Grid: Sequence {
     }
   }
 
+  public struct RowIterator: Sequence, IteratorProtocol {
+    let size: Coord
+    var coordinate: Coord
+
+    public mutating func next() -> Coord? {
+      if coordinate.x >= size.x { return nil }
+      defer { coordinate = coordinate.right }
+
+      return coordinate
+    }
+  }
+
+  public struct ColumnIterator: Sequence, IteratorProtocol {
+    let size: Coord
+    var coordinate: Coord
+
+    public mutating func next() -> Coord? {
+      if coordinate.y >= size.y { return nil }
+      defer { coordinate = coordinate.down }
+
+      return coordinate
+    }
+  }
+
   public struct Iterator: IteratorProtocol {
     let grid: Grid
     var iterator: CoordinateIterator
@@ -194,6 +218,16 @@ extension Grid: Sequence {
 
   public func makeIterator() -> Iterator {
     .init(grid: self, iterator: indices)
+  }
+
+  public func column(_ col: Int) -> ColumnIterator {
+    guard col < bounds.x else { return .init(size: bounds, coordinate: bounds) }
+    return .init(size: bounds, coordinate: .init(x: col, y: 0))
+  }
+
+  public func row(_ row: Int) -> RowIterator {
+    guard row < bounds.y else { return .init(size: size, coordinate: size) }
+    return .init(size: bounds, coordinate: .init(x: 0, y: row))
   }
 
   public var indices: CoordinateIterator {
@@ -214,10 +248,15 @@ extension Grid: Sequence {
 extension Grid {
   public func applying(_ transform: CGAffineTransform, bounds: Coord) -> Self {
     var grid = self
-    grid.bounds = bounds
-    grid.transform = transform.concatenating(self.transform)
+    grid.apply(transform, bounds: bounds)
     return grid
   }
+
+  public mutating func apply(_ transform: CGAffineTransform, bounds: Coord) {
+    self.bounds = bounds
+    self.transform = transform.concatenating(self.transform)
+  }
+
 
   public func scaled(x: CGFloat, y: CGFloat) -> Self {
     applying(
@@ -238,6 +277,29 @@ extension Grid {
       bounds: .init(x: bounds.y, y: bounds.x)
     )
   }
+
+  public var antirotated: Self {
+    var result = self
+    result.apply(
+      .identity
+        .translatedBy(x: CGFloat(bounds.x) / 2, y: CGFloat(bounds.y) / 2)
+        .rotated(by: .pi * 3 / 2)
+        .translatedBy(x: -CGFloat(bounds.y) / 2 + 1, y: -CGFloat(bounds.x) / 2),
+      bounds: .init(x: bounds.y, y: bounds.x)
+    )
+    return result
+  }
+
+  public mutating func antirotate() {
+    apply(
+      .identity
+        .translatedBy(x: CGFloat(bounds.x) / 2, y: CGFloat(bounds.y) / 2)
+        .rotated(by: .pi * 3 / 2)
+        .translatedBy(x: -CGFloat(bounds.y) / 2 + 1, y: -CGFloat(bounds.x) / 2),
+      bounds: .init(x: bounds.y, y: bounds.x)
+    )
+  }
+
 
   public var mirrored: Self {
     applying(
@@ -285,5 +347,13 @@ extension Grid: CustomStringConvertible where Element: CustomStringConvertible {
     }
 
     return result
+  }
+}
+
+extension Grid: Hashable where Element: Hashable {
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(
+      indices.map { self[$0] }
+    )
   }
 }
