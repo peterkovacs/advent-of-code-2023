@@ -18,7 +18,10 @@ struct Day14: ParsableCommand {
 
     init(grid: Grid<Element>) {
       self.size = grid.size
-      self.coords = grid.indices.filter { grid[$0] != .empty }.map { (grid[$0], $0) }
+      self.coords = grid.indices
+        .filter { grid[$0] != .empty }
+        .sorted { $0.x == $1.x ? $0.y < $1.y : $0.x < $0.x  }
+        .map { (grid[$0], $0) }
     }
 
     mutating func next() -> (hash: Int, load: Int)? {
@@ -65,7 +68,7 @@ private extension Array where Element == (Day14.Element, Coord) {
   // Returns the load assuming that the "east" side is facing north.
   mutating func tilt(size: Coord) -> Int {
     var result = 0
-    let groups = self.grouped(by: \.1.x).mapValues { $0.sorted { $0.1.y < $1.1.y } }
+    let groups = self.grouped(by: \.1.x)
     self.removeAll(keepingCapacity: true)
 
     for col in 0..<size.x {
