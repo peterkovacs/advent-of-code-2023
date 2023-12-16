@@ -70,7 +70,7 @@ struct Day15: ParsableCommand {
             box * slot * lens.value
           }
           .reduce(0, +)
-        
+
       }
       .reduce(0, +)
 
