@@ -2,6 +2,7 @@ import Algorithms
 import ArgumentParser
 import Collections
 import Utility
+import Foundation
 
 struct Day16: ParsableCommand { 
   enum Element {
@@ -95,20 +96,31 @@ struct Day16: ParsableCommand {
 
     print("Part 1", solve(grid: grid, start: .init(p: .zero, v: .right)))
 
-    let part2 = chain(
+    let part2 = Array(
       chain(
-        (0..<grid.size.x).map { Vector(p: .init(x: $0, y: 0), v: .down) },
-        (0..<grid.size.x).map { Vector(p: .init(x: $0, y: grid.size.y - 1), v: .up) }
-      ),
-      chain( 
-        (0..<grid.size.y).map { Vector(p: .init(x: 0, y: $0), v: .right) },
-        (0..<grid.size.y).map { Vector(p: .init(x: grid.size.x - 1, y: $0), v: .left) }
+        chain(
+          (0..<grid.size.x).map { Vector(p: .init(x: $0, y: 0), v: .down) },
+          (0..<grid.size.x).map { Vector(p: .init(x: $0, y: grid.size.y - 1), v: .up) }
+        ),
+        chain(
+          (0..<grid.size.y).map { Vector(p: .init(x: 0, y: $0), v: .right) },
+          (0..<grid.size.y).map { Vector(p: .init(x: grid.size.x - 1, y: $0), v: .left) }
+        )
       )
-    ).map {
-      solve(grid: grid, start: $0)
-    }.max()!
+    )
 
-    print("Part 2", part2)
+    var results = [Int](repeating: 0, count: part2.count)
+    DispatchQueue.concurrentPerform(iterations: part2.count) { i in
+      results[i] = solve(grid: grid, start: part2[i])
+    }
+
+    print("Part 2", results.max()!)
+
+//      .map {
+//      solve(grid: grid, start: $0)
+//    }.max()!
+//
+//    print("Part 2", part2)
   }
 }
 
