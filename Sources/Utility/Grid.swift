@@ -71,6 +71,10 @@ extension Coord: Comparable {
     applying(.init(rotationAngle: .pi / 2))
   }
 
+  public var reverse: Self {
+    applying(.init(rotationAngle: .pi))
+  }
+
   public func applying(_ transform: CGAffineTransform) -> Self {
     guard !transform.isIdentity else { return self }
     let point = CGPoint(x: x, y: y).applying(transform)
