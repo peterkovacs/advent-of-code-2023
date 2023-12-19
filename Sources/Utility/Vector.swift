@@ -15,4 +15,10 @@ public struct Vector: Hashable {
     self.position = position
     self.direction = direction
   }
+
+  public func abs() -> Self {
+    var result = self
+    result.direction = direction.abs()
+    return result
+  }
 }

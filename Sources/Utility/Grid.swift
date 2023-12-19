@@ -48,7 +48,7 @@ extension Coord: Comparable {
   }
 
   public func distance(to: Coord) -> Int {
-    abs(x - to.x) + abs(y - to.y)
+    Swift.abs(x - to.x) + Swift.abs(y - to.y)
   }
 
   public static func +(lhs: Self, rhs: Self) -> Self {
@@ -73,6 +73,10 @@ extension Coord: Comparable {
 
   public var reverse: Self {
     applying(.init(rotationAngle: .pi))
+  }
+
+  public func abs() -> Self {
+    .init(x: Swift.abs(x), y: Swift.abs(y))
   }
 
   public func applying(_ transform: CGAffineTransform) -> Self {
