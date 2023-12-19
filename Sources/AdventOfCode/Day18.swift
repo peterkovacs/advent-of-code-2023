@@ -6,7 +6,7 @@ import Utility
 import Foundation
 
 struct Day18: ParsableCommand { 
-  typealias Instruction = (direction: Coord, length: Int, color: String)
+  typealias Instruction = (direction: Coord, length: Int, color: (Int, Coord))
   enum Parser {
     static let instruction: some Parsing.Parser<Substring, Instruction> = Parse {
       (direction: $0.0, length: $0.1, color: $0.2)
@@ -24,13 +24,26 @@ struct Day18: ParsableCommand {
 
       Parse {
         "(#"
-        Prefix(6)
-        ")"
-      }.map(.string)
+        Parse {
+          Prefix<Substring>(5)
+        }
+        .compactMap {
+          Int($0, radix: 16)
+        }
+
+        // 0 means R, 1 means D, 2 means L, and 3 means U.
+        OneOf {
+          "0".map { Coord.right }
+          "1".map { .down }
+          "2".map { .left }
+          "3".map { .up }
+        }
+         ")"
+      }
     }
   }
 
-  struct Instructions: Sequence, IteratorProtocol {
+  struct Part1: Sequence, IteratorProtocol {
     var cursor = Coord.zero
     var instructions: [Instruction]
     var index: [Instruction].Index
@@ -77,93 +90,55 @@ struct Day18: ParsableCommand {
     }
   }
 
-  func run() throws {
-    let instructions = try input.map(Parser.instruction.parse)
+  struct Part2: Sequence, IteratorProtocol {
+    var cursor = Coord.zero
+    var instructions: [Instruction]
+    var index: [Instruction].Index
 
-    let coordinates = Array(Instructions(instructions: instructions))
+    init(
+      cursor: Coord = Coord.zero,
+      instructions: [Instruction]
+    ) {
+      self.cursor = cursor
+      self.instructions = instructions
+      self.index = instructions.startIndex
+    }
 
-//    let coordinates = instructions.reductions(Coord.zero) {
-//      $0 + ($1.direction * $1.length)
-//    }
+    mutating func next() -> Coord? {
+      if index == instructions.endIndex { return nil }
 
-    print(coordinates)
-//    assert(coordinates[0] == coordinates.last)
-//    let offset = Coord(
-//      x: coordinates.map(\.x).min()!,
-//      y: coordinates.map(\.y).min()!
-//    )
-//    let translation = CGAffineTransform.identity
-//      .translatedBy(
-//        x: -CGFloat(offset.x),
-//        y: -CGFloat(offset.y)
-//      )
-//
-//    let size = Coord(
-//      x: coordinates.map(\.x).max()!,
-//      y: coordinates.map(\.y).max()!
-//    ).applying(translation) + .down.right
-//
-//    var output = Grid(repeating: "." as Character, size: size)
-//    var windings = Grid(repeating: 0, size: size)
-//    var cursor = Coord.zero.applying(translation)
-//
-//    for instruction in instructions {
-//      switch instruction.0 {
-//      case .up:
-//        (0..<instruction.1).forEach {
-//          output[cursor + (instruction.0 * $0)] = "I"
-//        }
-//        (0..<instruction.1).forEach {
-//          windings[cursor + (instruction.0 * $0)] = 1
-//        }
-//      case .down:
-//        (0..<instruction.1).forEach {
-//          output[cursor + (instruction.0 * $0)] = "I"
-//        }
-//        (1...instruction.1).forEach {
-//          windings[cursor + (instruction.0 * $0)] = -1
-//        }
-//      case .left, .right:
-//        (0..<instruction.1).forEach {
-//          output[cursor + (instruction.0 * $0)] = "I"
-//        }
-//
-//      default: break
-//      }
-//
-//      cursor = cursor + instruction.0 * instruction.1
-//    }
-//
-//    var inside = 0
-//    for point in windings.indices {
-//      var p = point
-//      var wn = 0
-//      while windings.isValid(p) {
-//        wn += windings[p]
-//        p = p.right
-//      }
-//
-//      if wn != 0 {
-//        output[point] = "#"
-//        inside += 1
-//      }
-//    }
-//
-//    print(output)
-//
-//    print("Part 1", output.filter { $0 == "#" }.count)
-    // print("Part 1", inside)
-//
-//    let min = coordinates.min(by: <)!.applying(translation)
-//    let max = coordinates.max(by: <)!.applying(translation)
-//
-//    print(min, max, offset, offset.applying(translation.inverted()))
-//
-//    print(instructions.map(\.1).reduce(0, +))
-//
-//    print(size, offset)
+      defer {
+        let prev = instructions[
+          (index - 1 + instructions.count) % instructions.count
+        ].color.1
 
-    let area = zip(
+        let curr = instructions[index]
+
+        let next = instructions[
+          (index + 1) % instructions.count
+        ].color.1
+
+        if prev == next {
+          cursor = cursor + (curr.color.1 * curr.color.0)
+        } else if prev.clockwise == curr.color.1,
+                  curr.color.1.clockwise == next {
+          cursor = cursor + (curr.color.1 * (curr.color.0 + 1))
+        } else if prev.counterClockwise == curr.color.1,
+                  curr.color.1.counterClockwise == next {
+          cursor = cursor + (curr.color.1 * (curr.color.0 - 1))
+        } else {
+          fatalError()
+        }
+
+        index += 1
+      }
+
+      return cursor
+    }
+  }
+
+  func area(of coordinates: [Coord]) -> Int {
+    zip(
       zip(
         coordinates,
         chain( coordinates.dropFirst(), coordinates.prefix(1) )
@@ -182,11 +157,17 @@ struct Day18: ParsableCommand {
         (a.y + b.y)
       }
     )
-      .reduce(0) { $0 + ($1.0 * $1.1) } / 2
+    .reduce(0) { $0 + ($1.0 * $1.1) } / 2
+  }
 
-    // let boundary = instructions.map(\.length).reduce(0, +)
+  func run() throws {
+    let instructions = try input.map(Parser.instruction.parse)
 
-    print("Part 1", area)
+    let part1 = area(of: Array(Part1(instructions: instructions)))
+    print("Part 1", part1)
+
+    let part2 = area(of: Array(Part2(instructions: instructions)))
+    print("Part 2", part2)
   }
 }
 
