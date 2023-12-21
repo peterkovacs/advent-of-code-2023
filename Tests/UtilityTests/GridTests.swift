@@ -152,4 +152,66 @@ class GridTests: XCTestCase {
     XCTAssertEqual(grid.indices.map(\.y).max(), 4)
   }
 
+  func testCoord_MOD() throws {
+    let coord = Coord.zero
+    let size = Coord(x: 100, y: 100)
+
+    XCTAssertEqual(coord % size, coord)
+    XCTAssertEqual(size % size, coord)
+
+    XCTAssertEqual(coord.left % size, Coord(x: 99, y: 0))
+    XCTAssertEqual(coord.up % size, Coord(x: 0, y: 99))
+
+    XCTAssertEqual(.init(x: -100, y: 0) % size, .zero)
+    XCTAssertEqual(.init(x: -101, y: 0) % size, Coord(x: 99, y: 0))
+    XCTAssertEqual(.init(x: -100, y: -100) % size, .zero)
+    XCTAssertEqual(.init(x: -101, y: -101) % size, Coord(x: 99, y: 99))
+
+    XCTAssertEqual(.init(x: -1000, y: 0) % size, .zero)
+    XCTAssertEqual(.init(x: -1001, y: 0) % size, Coord(x: 99, y: 0))
+    XCTAssertEqual(.init(x: -1000, y: -1000) % size, .zero)
+    XCTAssertEqual(.init(x: -1001, y: -1001) % size, Coord(x: 99, y: 99))
+
+    XCTAssertEqual(.init(x: 100, y: 0) % size, .zero)
+    XCTAssertEqual(.init(x: 101, y: 0) % size, Coord(x: 1, y: 0))
+    XCTAssertEqual(.init(x: 100, y: 100) % size, .zero)
+    XCTAssertEqual(.init(x: 101, y: 101) % size, Coord(x: 1, y: 1))
+
+    XCTAssertEqual(.init(x: 1000, y: 0) % size, .zero)
+    XCTAssertEqual(.init(x: 1001, y: 0) % size, Coord(x: 1, y: 0))
+    XCTAssertEqual(.init(x: 1000, y: 1000) % size, .zero)
+    XCTAssertEqual(.init(x: 1001, y: 1001) % size, Coord(x: 1, y: 1))
+  }
+
+  func testCoord_DIV() throws {
+    let coord = Coord.zero
+    let size = Coord(x: 100, y: 100)
+
+    XCTAssertEqual(coord % size, coord)
+    XCTAssertEqual(size % size, coord)
+
+    XCTAssertEqual(coord.left / size, .zero)
+    XCTAssertEqual(coord.up / size, .zero)
+
+    XCTAssertEqual(.init(x: -100, y: 0) / size, .init(x: -1, y: 0))
+    XCTAssertEqual(.init(x: -101, y: 0) / size, .init(x: -1, y: 0))
+    XCTAssertEqual(.init(x: -100, y: -100) / size, .init(x: -1, y: -1))
+    XCTAssertEqual(.init(x: -101, y: -101) / size, .init(x: -1, y: -1))
+
+    XCTAssertEqual(.init(x: -1000, y: 0) / size, .init(x: -10, y: 0))
+    XCTAssertEqual(.init(x: -1001, y: 0) / size, .init(x: -10, y: 0))
+    XCTAssertEqual(.init(x: -1000, y: -1000) / size, .init(x: -10, y: -10))
+    XCTAssertEqual(.init(x: -1001, y: -1001) / size, .init(x: -10, y: -10))
+
+    XCTAssertEqual(.init(x: 100, y: 0) / size, .init(x: 1, y: 0))
+    XCTAssertEqual(.init(x: 101, y: 0) / size, .init(x: 1, y: 0))
+    XCTAssertEqual(.init(x: 100, y: 100) / size, .init(x: 1, y: 1))
+    XCTAssertEqual(.init(x: 101, y: 101) / size, .init(x: 1, y: 1))
+
+    XCTAssertEqual(.init(x: 1000, y: 0) / size, .init(x: 10, y: 0))
+    XCTAssertEqual(.init(x: 1001, y: 0) / size, .init(x: 10, y: 0))
+    XCTAssertEqual(.init(x: 1000, y: 1000) / size, .init(x: 10, y: 10))
+    XCTAssertEqual(.init(x: 1001, y: 1001) / size, .init(x: 10, y: 10))
+  }
+
 }

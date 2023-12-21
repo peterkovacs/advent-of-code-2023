@@ -46,7 +46,9 @@ extension Coord: Comparable {
   public static func < (lhs: Coord, rhs: Coord) -> Bool {
     lhs.y == rhs.y ? (lhs.x < rhs.x) : lhs.y < rhs.y
   }
+}
 
+extension Coord {
   public func distance(to: Coord) -> Int {
     Swift.abs(x - to.x) + Swift.abs(y - to.y)
   }
@@ -77,6 +79,21 @@ extension Coord: Comparable {
 
   public func abs() -> Self {
     .init(x: Swift.abs(x), y: Swift.abs(y))
+  }
+
+  public static func %(lhs: Self, rhs: Self) -> Coord {
+    lhs.quotientAndRemainder(dividingBy: rhs).remainder
+  }
+
+  public static func /(lhs: Self, rhs: Self) -> Coord {
+    lhs.quotientAndRemainder(dividingBy: rhs).quotient
+  }
+
+  public func quotientAndRemainder(dividingBy rhs: Self) -> (quotient: Self, remainder: Self) {
+    let (xq, xr) = x.quotientAndRemainder(dividingBy: rhs.x)
+    let (yq, yr) = y.quotientAndRemainder(dividingBy: rhs.y)
+
+    return (.init(x: xq, y: yq), .init(x: xr < 0 ? xr + rhs.x : xr, y: yr < 0 ? yr + rhs.y : yr))
   }
 
   public func applying(_ transform: CGAffineTransform) -> Self {
