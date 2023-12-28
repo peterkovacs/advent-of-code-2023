@@ -106,8 +106,7 @@ struct Day21: ParsableCommand {
       part2 += max(1, i * 4) * reachable[keyPath: parity]
     }
 
-    // I'm really not sure why these axes are \.even and not \.odd, which is what I would expect.
-    part2 += bottom.even + top.even + left.even + right.even
+    part2 += bottom.odd + top.odd + left.odd + right.odd
     part2 += bottomLeft[1].odd * (grids - 1) + bottomRight[1].odd * (grids - 1) + topLeft[1].odd * (grids - 1) + topRight[1].odd * (grids - 1)
     part2 += bottomLeft[0].even * grids + bottomRight[0].even * grids + topLeft[0].even * grids + topRight[0].even * grids
     print("Part 2", part2)
@@ -115,42 +114,34 @@ struct Day21: ParsableCommand {
   }
 }
 
-fileprivate struct Visit: Comparable {
-  let position: Coord
-  let steps: Int
-  let distance: Int
+fileprivate extension Coord {
+  var parity: WritableKeyPath<(even: Int, odd: Int), Int> {
+    (x + y) % 2 == 0 ? \.even : \.odd
+  }
+}
 
-  static func <(lhs: Self, rhs: Self) -> Bool {
-    (lhs.steps + lhs.distance) < (rhs.steps + rhs.distance)
+fileprivate extension KeyPath where Root == (even: Int, odd: Int), Value == Int {
+  var next: WritableKeyPath<Root, Value> {
+    switch self {
+    case \.even: return \(even: Int, odd: Int).odd
+    case \.odd: return \(even: Int, odd: Int).even
+    default: fatalError()
+    }
   }
 }
 
 fileprivate func gardens(grid: Grid<Day21.Element>, start: Coord, steps: Int) -> (even: Int, odd: Int) {
-  var q = Set(grid.indices.filter { grid[$0] == .empty })
-  var dist = [Coord: Int]()
-  var heap = Heap<Visit>([.init(position: start, steps: 0, distance: 0)])
+  var visited: Set<Coord> = [ start ]
+  var queue: Deque = [ (start, start.parity, steps) ]
+  var result =  (even: 0, odd: 0)
 
-  dist[start] = 0
-
-  while let p = heap.popMin() {
-    q.remove(p.position)
-
-    // Already found a faster path to this position
-    guard dist[p.position] == p.steps else { continue }
-    guard p.steps < steps else { continue }
-
-    for neighbor in grid.neighbors(adjacent: p.position) where q.contains(neighbor) {
-      let alt = p.steps + 1
-      if alt < dist[neighbor, default: Int.max] {
-        heap.insert(.init(position: neighbor, steps: alt, distance: 0))
-        dist[neighbor] = alt
-      }
+  while let (pos, parity, steps) = queue.popFirst() {
+    result[keyPath: parity] += 1
+    guard steps > 0 else { continue }
+    for neighbor in grid.neighbors(adjacent: pos) where grid[neighbor] == .empty && visited.insert(neighbor).inserted {
+      queue.append((neighbor, parity.next, steps - 1))
     }
   }
 
-  let total = dist.values.count
-  let even = dist.values.lazy.filter { $0 % 2 == 0 }.count
-  let odd = total - even
-
-  return (even, odd)
+  return result
 }
