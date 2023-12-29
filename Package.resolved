@@ -64,6 +64,15 @@
       }
     },
     {
+      "identity" : "swift-z3",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/LuizZak/swift-z3.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "5c5d85e2d9e6b727486d872fbd8e6fa8eceeaf72"
+      }
+    },
+    {
       "identity" : "xctest-dynamic-overlay",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",

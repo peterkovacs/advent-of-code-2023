@@ -1,6 +1,7 @@
 import ArgumentParser
 import Parsing
 import Utility
+import SwiftZ3
 
 /*
  19, 13, 30 @ -2,  1, -2
@@ -65,7 +66,49 @@ struct Day24: ParsableCommand {
 
     // ---
 
+    let config = Z3Config()
+    config.setParameter(name: "model", value: "true")
+    let z3 = Z3Context(configuration: config)
+    let (x, y, z) = (
+      z3.makeConstant(name: "x", sort: IntSort.self),
+      z3.makeConstant(name: "y", sort: IntSort.self),
+      z3.makeConstant(name: "z", sort: IntSort.self)
+    )
 
+    let (vx, vy, vz) = (
+      z3.makeConstant(name: "vx", sort: IntSort.self),
+      z3.makeConstant(name: "vy", sort: IntSort.self),
+      z3.makeConstant(name: "vz", sort: IntSort.self)
+    )
+
+    let solver = z3.makeSolver()
+    for (offset, stone) in hail.enumerated() {
+      let t = z3.makeConstant(name: "t\(offset)", sort: IntSort.self)
+      let xh = z3.makeInteger64(Int64(stone.position.x))
+      let yh = z3.makeInteger64(Int64(stone.position.y))
+      let zh = z3.makeInteger64(Int64(stone.position.z))
+      let vxh = z3.makeInteger64(Int64(stone.direction.x))
+      let vyh = z3.makeInteger64(Int64(stone.direction.y))
+      let vzh = z3.makeInteger64(Int64(stone.direction.z))
+
+      solver.assert(t > 0)
+      solver.assert(x + vx * t ==  xh + vxh * t)
+      solver.assert(y + vy * t ==  yh + vyh * t)
+      solver.assert(z + vz * t ==  zh + vzh * t)
+    }
+
+    if solver.check() == .satisfiable, let model = solver.getModel() {
+      let solution = Vector3(
+        position: .init(x: Int(model.int64(x)), y: Int(model.int64(y)), z: Int(model.int64(z))),
+        direction: .init(x: Int(model.int64(vx)), y: Int(model.int64(vy)), z: Int(model.int64(vz)))
+      )
+
+      print("Part 2", solution.position.x + solution.position.y + solution.position.z)
+    }
+
+    else {
+      print("Failed to solve.")
+    }
   }
 }
 

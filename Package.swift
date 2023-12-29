@@ -13,7 +13,8 @@ let package = Package(
     .package(url: "https://github.com/apple/swift-collections", branch: "main"),
     .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
     .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0"),
-    .package(url: "https://github.com/pointfreeco/swift-parsing", from: "0.13.0")
+    .package(url: "https://github.com/pointfreeco/swift-parsing", from: "0.13.0"),
+    .package(url: "https://github.com/LuizZak/swift-z3.git", branch: "master")
   ],
   targets: [
     .target(
@@ -31,7 +32,8 @@ let package = Package(
         .product(name: "Collections", package: "swift-collections"),
         .product(name: "Numerics", package: "swift-numerics"),
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
-        .product(name: "Parsing", package: "swift-parsing")
+        .product(name: "Parsing", package: "swift-parsing"),
+        .product(name: "SwiftZ3", package: "swift-z3"),
       ]
     ),
     .testTarget(
