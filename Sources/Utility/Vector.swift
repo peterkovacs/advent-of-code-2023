@@ -22,3 +22,13 @@ public struct Vector: Hashable {
     return result
   }
 }
+
+public struct Vector3: Hashable {
+  public var position: Coord3
+  public var direction: Coord3
+
+  public init(position: Coord3, direction: Coord3) {
+    self.position = position
+    self.direction = direction
+  }
+}
