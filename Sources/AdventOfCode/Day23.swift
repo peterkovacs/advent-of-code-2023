@@ -39,7 +39,7 @@ struct Day23: ParsableCommand {
 
     let distances = Dictionary(
       graph.map { a, b, steps in
-        (Key(a: a, b: b), steps)
+        (Edge(a: a, b: b), steps)
       }
     ) { $0 < $1 ? $1 : $0 }
 
@@ -50,12 +50,13 @@ struct Day23: ParsableCommand {
     ) { $0.union($1) }
 
 
-    let part2 = dfs(graph: edges, distances: distances, visited: .init(), position: start, goal: goal)!
+    var cache = [Key: Int?]()
+    let part2 = dfs(graph: edges, distances: distances, visited: .init(), position: start, goal: goal, cache: &cache)!
 
     print("Part 2", part2)
   }
 
-  struct Key: Hashable {
+  struct Edge: Hashable {
     let a, b: Coord
     init(a: Coord, b: Coord) {
       self.a = a < b ? a : b
@@ -111,18 +112,31 @@ struct Day23: ParsableCommand {
     return result
   }
 
-  func dfs(graph: [Coord : Set<Coord>], distances: [Key: Int], visited: Set<Coord>, position: Coord, goal: Coord) -> Int? {
+  struct Key: Hashable {
+    let visited: Set<Coord>
+    let position: Coord
+  }
+
+  func dfs(graph: [Coord : Set<Coord>], distances: [Edge: Int], visited: Set<Coord>, position: Coord, goal: Coord, cache: inout [Key: Int?]) -> Int? {
     guard position != goal else { return 0 }
 
-    return graph[position, default: .init()]
-      .filter { !visited.contains($0) }
-      .compactMap { p in
-        var visited = visited
-        visited.insert(p)
+    let key = Key(visited: visited, position: position)
 
-        return dfs(graph: graph, distances: distances, visited: visited, position: p, goal: goal).map { $0 + distances[.init(a: position, b: p)]! }
+    if let cached = cache[key] { return cached }
+    var result: Int? = nil
+
+    for p in graph[position, default: .init()] where !visited.contains(p) {
+      var visited = visited
+      visited.insert(p)
+
+      if let solution = dfs(graph: graph, distances: distances, visited: visited, position: p, goal: goal, cache: &cache) {
+        result = max(result ?? 0, solution + distances[.init(a: position, b: p), default: 0])
       }
-      .max()
+    }
+
+    cache[.init(visited: visited, position: position)] = .some(result)
+
+    return result
   }
 
   func dfs(grid: Grid<Character>, visited: inout Set<Coord>, position: Coord, goal: Coord, allowed: (Coord, Character) -> Bool) -> Int? {
