@@ -9,7 +9,6 @@ struct Day21: ParsableCommand {
     case empty, rock
   }
 
-  @Argument var steps: Int = 64
   func run() {
     let grid = self.grid
     let start = grid.indices.first { grid[$0] == "S" }!
@@ -28,13 +27,17 @@ struct Day21: ParsableCommand {
 
     inaccessible.forEach { elementGrid[$0] = .rock }
 
-    let part1 = gardens(
-      grid: elementGrid,
-      start: start,
-      steps: steps
-    )
-    print("Part 1", part1.even)
+    do {
+      let steps = 64
+      let part1 = gardens(
+        grid: elementGrid,
+        start: start,
+        steps: steps
+      )
+      print("Part 1", part1.even)
+    }
 
+    let steps = 26501365
     let grids: Int = steps / elementGrid.size.x
     let remainder: Int = steps % elementGrid.size.x
 
@@ -69,6 +72,7 @@ struct Day21: ParsableCommand {
       steps: grid.size.x - 1
     )
 
+    // When entering from a corner, we need an extra step since we cannot go diagonal.
     let bottomLeft = [remainder - 1, remainder + grid.size.x - 1].map { i in
       gardens(
         grid: elementGrid,
@@ -102,12 +106,18 @@ struct Day21: ParsableCommand {
     }
 
     var part2 = 0
+    // Sum of grid squares on the interior of the diamond.
     for (parity, i) in zip([\(even:Int,odd:Int).odd, \.even].cycled(), 0..<grids) {
       part2 += max(1, i * 4) * reachable[keyPath: parity]
     }
 
+    // Sum of the corners of the diamond
     part2 += bottom.odd + top.odd + left.odd + right.odd
+
+    // Inside edge of the diamond.
     part2 += bottomLeft[1].odd * (grids - 1) + bottomRight[1].odd * (grids - 1) + topLeft[1].odd * (grids - 1) + topRight[1].odd * (grids - 1)
+
+    // Outside edge of the diamond.
     part2 += bottomLeft[0].even * grids + bottomRight[0].even * grids + topLeft[0].even * grids + topRight[0].even * grids
     print("Part 2", part2)
 
